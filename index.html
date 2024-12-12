@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Firebase Chat</title>
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div id="chat-container">
+    <ul id="messages"></ul>
+    <input type="text" id="messageInput" placeholder="Type your message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    // Your Firebase config
+    const firebaseConfig = {
+        apiKey: "..",
+        authDomain: "..",
+        projectId: "..",
+        storageBucket: "..",
+        messagingSenderId: "..",
+        appId: ".."
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Function to send a message
+    function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+
+        if (message) {
+            db.collection("messages").add({
+                text: message,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            }).then(() => {
+                messageInput.value = ''; // Clear input field
+            }).catch((error) => {
+                console.error("Error adding message: ", error);
+            });
+        }
+    }
+
+    // Real-time listener for new messages
+    window.addEventListener("load", () => {
+        db.collection("messages").orderBy("timestamp")
+        .onSnapshot((snapshot) => {
+            const messagesList = document.getElementById('messages');
+            messagesList.innerHTML = ''; // Clear existing messages
+
+            snapshot.forEach((doc) => {
+                const message = doc.data().text;
+                const li = document.createElement('li');
+                li.textContent = message;
+                messagesList.appendChild(li);
+            });
+        });
+    });
+  </script>
+</body>
+</html>
